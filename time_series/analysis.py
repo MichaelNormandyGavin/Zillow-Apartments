@@ -4,7 +4,7 @@ import pandas as pd
 
 
 
-def compute_correlation(x,y,r2=False):
+def compute_correlation(x,y,r2=False,auto=False):
     
     '''Take two array-like series to calculate the correlation
     x: numpy.array or pandas.DataFrame: x value for correlation
@@ -12,9 +12,14 @@ def compute_correlation(x,y,r2=False):
     
     r2: Boolean (optional): return r-squared value instead of r'''
     
-    
+    '''Need to remove the mean for autocorrelation?'''
     
     df = pd.DataFrame({'x':x,'y':y})
+    
+    if auto:
+        
+        df['x'] = df['x'] - df['x'].mean()
+        df['y'] = df['y'] - df['y'].mean()
     
     df.dropna(inplace=True)
     
@@ -31,10 +36,12 @@ def compute_correlation(x,y,r2=False):
     
     corr = (n*(sum_xy) - (sum_x*sum_y)) / (sqrt(((n*(sum_x2) - (sum_x**2)) *((n*(sum_y2) - (sum_y**2))))))
     
+    #corr_test = np.cov(df['x'].values,df['y'].values)[0,1]
+    
     return df, corr
 
-def autocorrelate(x,shift=1,**kwargs):
+def autocorrelate(x,shift=1,auto=True,**kwargs):
     
-    df, corr = compute_correlation(x, x.shift(-shift),**kwargs)
+    df, corr = compute_correlation(x, x.shift(shift),auto=auto,**kwargs)
     
     return df, corr
