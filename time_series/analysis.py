@@ -40,8 +40,52 @@ def compute_correlation(x,y,r2=False,auto=False):
     
     return df, corr
 
-def autocorrelate(x,shift=1,auto=True,**kwargs):
+def acf_compute(x,y):
     
-    df, corr = compute_correlation(x, x.shift(shift),auto=auto,**kwargs)
+    if isinstance(x,pd.DataFrame) or isinstance(x,pd.Series):
+        
+        x = x.dropna().values
+        
+    if isinstance(y,pd.DataFrame) or isinstance(y,pd.Series):
+        
+        y = y.dropna().values
+           
+    nx = len(x)
+    ny = len(y)
     
-    return df, corr
+    x = x[nx-ny:]
+    
+    top = np.mean(np.dot((x-np.mean(x)), (y-np.mean(y))))
+    
+    bot = np.sum(np.square((x-np.mean(x))))
+    
+    acf_r = top/bot
+    
+    return acf_r
+    
+
+def autocorrelate(x,shift=1,lags=None,df=False):
+    
+    if isinstance(x,pd.DataFrame) or isinstance(x,pd.Series):
+        
+        x = x.values
+        
+    if lags is None:
+        
+        lags = len(x)
+        
+    else:
+        
+        lags = lags
+        
+    r_array = np.empty(lags)
+        
+    for i in range(lags):
+        
+        r_array[i] = acf_compute(x[i:],x[:len(x)-i])
+        
+    if df:
+        
+        r_array = pd.DataFrame(data=r_array)
+    
+    return r_array
