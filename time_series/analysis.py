@@ -1,7 +1,7 @@
 from math import sqrt
 import numpy as np
 import pandas as pd
-
+import matplotlib.pyplot as plt
 
 
 def compute_correlation(x,y,r2=False,auto=False):
@@ -64,28 +64,60 @@ def acf_compute(x,y):
     return acf_r
     
 
-def autocorrelate(x,shift=1,lags=None,df=False):
+def autocorrelate(x,shift=1,conf_int=False,lags=None,df=False):
     
     if isinstance(x,pd.DataFrame) or isinstance(x,pd.Series):
         
         x = x.values
         
+    n = len(x)
+        
     if lags is None:
         
-        lags = len(x)
+        lags = n
         
     else:
         
         lags = lags
         
     r_array = np.empty(lags)
+    conf_lower = np.empty(lags)
+    conf_upper = np.empty(lags)
         
     for i in range(lags):
         
         r_array[i] = acf_compute(x[i:],x[:len(x)-i])
+        conf_lower[i] = -1.96 / np.sqrt(len(x)-i)
+        conf_upper[i] = 1.96 / np.sqrt(len(x)-i)
         
     if df:
         
         r_array = pd.DataFrame(data=r_array)
+        
+    if conf_int:
+        
+        return r_array, conf_upper, conf_lower
     
     return r_array
+
+def plot_auto_corr(x,title=None,lags=None):
+    
+    auto_corr, conf_upper, conf_lower = autocorrelate(x,conf_int=True,lags=lags)
+    
+    plt.plot(auto_corr,linestyle='none',marker='o',color='red')
+
+    for i, x in enumerate(auto_corr):
+        plt.vlines(x=i,ymin=min(0,x),ymax=max(0,x))
+        
+    plt.fill_between([i for i in range(len(auto_corr))],conf_lower,conf_upper,color='green',alpha=0.2)
+    
+    if title is None:
+        title = 'Autocorrelation (Lags = {})'.format(len(auto_corr))
+        
+    else:
+        
+        title = title + ' (Lags = {})'.format(len(auto_corr))
+    plt.title(title,fontsize=16)
+    plt.show()
+
+    
