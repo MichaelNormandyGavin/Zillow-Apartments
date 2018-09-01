@@ -2,6 +2,7 @@ from math import sqrt
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from statsmodels.tsa.stattools import adfuller
 
 
 def compute_correlation(x,y,r2=False,auto=False):
@@ -119,5 +120,27 @@ def plot_auto_corr(x,title=None,lags=None):
         title = title + ' (Lags = {})'.format(len(auto_corr))
     plt.title(title,fontsize=16)
     plt.show()
+    
+def test_stationarity(df, print_results=True, **kwargs):
+    
+    '''Use stattools adfuller function with a more DataFrame-friendly format
+    
+    df = pandas.DataFrame or pandas.Series: required, used for testing stationarity
+    
+    **kwargs = dict, used to feed adfuller arguments'''
+
+    raw_results = adfuller(df,**kwargs)
+    
+    df_rows = {fk: fv for fv, fk in zip(raw_results[:4],list(['Test Statistic','P-Value','Lags Used','Observations Taken']))}
+    
+    df_rows.update({sk: sv for sk, sv in raw_results[4:-1][0].items()})
+    
+    
+    dickey_test_results = pd.DataFrame(index=df_rows.keys(),data=list(df_rows.values()),columns=['Metric'])
+    
+    if print_results:
+        print('Results of the Augmented Dickey-Fuller Test: \n\n', dickey_test_results.head(10))
+    
+    return dickey_test_results
 
     
